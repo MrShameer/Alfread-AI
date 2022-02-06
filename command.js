@@ -1,4 +1,5 @@
 const{prefix}= require('./config.json')
+const slash = require("./slash");
 
 module.exports = (client, aliases, callback) => {
 	if(typeof aliases === 'string'){

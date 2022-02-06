@@ -2,5 +2,13 @@
 	"token": "YOUR BOT TOKEN",
 	"prefix": ".",
 	"listned-embed" : "#000000",
-	"help-embed" : "#000000"
+	"help-embed" : "#000000",
+	"song-embed" : "#FFFFFF",
+	"guildId" : "FOR TESTING PURPOSES, PUT YOU TESTING GUILD ID",
+	"language": 
+		{
+			"english-us" : "en-US",
+			"english-uk" : "en-GB",
+			"malay" : "ms-MY"
+		}
 }

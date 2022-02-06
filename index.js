@@ -1,15 +1,21 @@
-const { Client, Intents, MessageEmbed  } = require("discord.js");
 const config = require('./config.json')
-const language = require('./language.json')
-const command = require('./command')
-const play = require('./song')
+const slashCommand = require('./slash-command.json')
+
+const { Client, Intents, MessageEmbed } = require("discord.js");
 const { joinVoiceChannel }  = require('@discordjs/voice');
 var { addSpeechEvent } = require("discord-speech-recognition");
+
+const command = require('./command')
+const play = require('./song')
+const tictactoe = require('./tictactoe')
+const slash = require("./slash");
+
 const client = new Client({
 	intents: [
 	  Intents.FLAGS.GUILDS,
 	  Intents.FLAGS.GUILD_VOICE_STATES,
 	  Intents.FLAGS.GUILD_MESSAGES,
+	  Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
 	],
   });
 addSpeechEvent(client);
@@ -35,28 +41,83 @@ const help =  new MessageEmbed()
 	.addField('play', 'if you say anything with play and folowed by the song name it will play the song.')
 	.addField('\u200B','\u200B')
 	.setTimestamp()
-	.setFooter({ text: 'By MrShamer', iconURL: 'https://img.freepik.com/free-vector/business-suit-leader-person-concept-vector-illustration_1284-42667.jpg' });
-
-function checkcommand(args, message){
-	
-	if(args.some(substring=>message.content.includes(substring))){
-		return true
-	}
-	return false
-}
+	.setFooter({ text: 'By MrShameer', iconURL: 'https://img.freepik.com/free-vector/business-suit-leader-person-concept-vector-illustration_1284-42667.jpg' });
 
 client.on('ready', () => {
 	console.log('The client is ready')
 
-	command(client, 'help', (message) =>{
-		message.channel.send({ embeds: [help] })
+	const guildId = config.guildId;
+	var guild = client.guilds.cache.get(guildId)
+	// guild.commands.delete('939534235646197771')
+	// guild.commands.fetch().then(c=> console.log(c))
+	let commands
+	if (guild) {
+		commands = guild.commands
+	} else {
+	  commands = client.application?.commands
+	}
+
+	slashCommand.forEach(function(obj){ 
+		commands?.create(obj)
+	});
+
+	slash(client, 'ttt11', message => {
+		message.reply('dddd')
 	})
 
+	slash(client, 'tictactoe', async(interaction) => {
+		let { options } = interaction
+
+		await interaction.reply( `${options.getUser('opponent')} do you want to play?`)
+		const filter = (reaction, user) => {
+			return ['✅', '❌'].includes(reaction.emoji.name) && user.id === options.getUser('opponent').id;
+		};
+		const message = await interaction.fetchReply()
+		message.react('✅').then(() => message.react('❌'));
+
+		message.awaitReactions({filter, max: 1, time: 30000, errors: ['time'] }).then(collected => {
+			const reaction = collected.first();
+
+			if (reaction.emoji.name === '✅') {
+				tictactoe(client, message, interaction)
+			} else {
+				message.reply('Sorry maybe next time!');
+			}
+		})
+		.catch(collected => {
+			message.reply('You reacted with neither a thumbs up, nor a thumbs down.');
+		});
+	})
+
+	command(client, 'help', (message) =>{
+		message.reply({ embeds: [help] })
+	})
+
+	slash(client, 'help', (interaction) =>{
+		interaction.reply({ embeds: [help] })
+	})
+
+	function ping(message){
+		var ping =  new MessageEmbed()
+			.setAuthor({ name: 'Alfread-AI', iconURL: 'https://img.freepik.com/free-vector/business-suit-leader-person-concept-vector-illustration_1284-42667.jpg', url: '' })
+			.setDescription(`Latency : **${Date.now() - message.createdTimestamp}** ms \n API Latency : **${Math.round(client.ws.ping)}** ms`)
+		message.reply({ embeds: [ping] })
+	}
+
 	command(client, 'ping', (message) =>{
-		message.channel.send('Pong!')
+		ping(message)
+	})
+
+	slash(client, 'ping', (message) => {
+		ping(message)
 	})
 
 	command(client, 'join', (message) =>{
+		var voiceChannel = message.member.voice.channel;
+		if (!voiceChannel) return message.reply('You need to be in a channel to execute this command!');
+		const permissions = voiceChannel.permissionsFor(message.client.user);
+		if (!permissions.has('CONNECT')) return message.reply('You dont have the correct permissins');
+		if (!permissions.has('SPEAK')) return message.reply('You dont have the correct permissins');
 		connection = joinVoiceChannel({
 			channelId: message.member.voice.channel.id,
 			guildId: message.guild.id,
@@ -69,9 +130,9 @@ client.on('ready', () => {
 	//EXPERIMENTAL
 	command(client, 'language', (message) =>{
 		var lang = message.content.substr('.language'.length).trim().split(' ').shift();
-		if(!language[lang]){
-			console.log(language[lang]);
-			addSpeechEvent(client, { lang: language[lang] });
+		if(config.language[lang]){
+			console.log(config.language[lang]);
+			addSpeechEvent(client, { lang: config.language[lang] });
 		}
 	})
 
@@ -82,13 +143,25 @@ client.on('ready', () => {
 	command(client, ['play','p'], (message) =>{
 		currentChannel = message.channel.id;
 		var songs = message.content.substr('.play'.length).trim()
-		play(client, message, songs, currentChannel, true)
+		play(client, message, songs, currentChannel)
 	})
 
 	command(client, ['stop','skip'], (message) =>{
-		play(null, null, null, null, false)
+		play(null,message)
+	})
+
+	command(client, ['tictactoe'], (message) => {
+		tictactoe(client, message)
 	})
 })
+
+
+function checkcommand(args, message){
+	if(args.some(substring=>message.content.includes(substring))){
+		return true
+	}
+	return false
+}
 
 client.on("speech", (message) => {
 	console.log(message.content);
@@ -110,15 +183,16 @@ client.on("speech", (message) => {
 			// var keyword = (message.content.indexOf('play') > message.content.indexOf('song')) ? 'play' : 'song';
 			var songs = message.content.substring(message.content.indexOf('play')+'play'.length).trim()
 			// if(songs){
-			play(client, message, songs, currentChannel, true)
+			play(client, message, songs, currentChannel)
 			// }
 		}
 		else if(checkcommand(['stop','skip'], message)){
-			play(null, null, null, null, false)
+			play()
 		}
 	}
 });
+
 client.login(config.token)
 
-//320011976528
-//https://discord.com/api/oauth2/authorize?client_id=934534754416611400&permissions=407521984336&scope=bot
+//544961199696
+//https://discord.com/api/oauth2/authorize?client_id=934534754416611400&permissions=544961199696&scope=bot%20applications.commands

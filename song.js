@@ -1,11 +1,13 @@
 const ytdl = require('ytdl-core');
 const ytSearch = require('yt-search');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource }  = require('@discordjs/voice');
-const { Collection } = require('discord.js');
+const { Collection, MessageEmbed } = require('discord.js');
+const config = require('./config.json')
 var subscription = null;
-module.exports = async(client, message, args, currentChannel, play) => {
+module.exports = async(client, message, args, currentChannel) => {
 
-    if(!play && subscription) return subscription.unsubscribe();
+    if(!client && subscription) return subscription.unsubscribe();
+    else if(!client && !subscription) return message.reply('The bot is not playing any songs');
 
     const voiceChannel = message.member.voice.channel;
  
@@ -42,10 +44,10 @@ module.exports = async(client, message, args, currentChannel, play) => {
         subscription = connection.subscribe(player);
 
         try{
-            await message.reply(`:thumbsup: Now Playing ***Your Link!***`)
+            await message.reply(`:notes: Now Playing ***Your Link!***`)
         }
         catch{
-            client.channels.cache.get(currentChannel).send(`:thumbsup: Now Playing ***Your Link!***`);
+            client.channels.cache.get(currentChannel).send(`:notes: Now Playing ***Your Link!***`);
         }
 
         return
@@ -74,11 +76,17 @@ module.exports = async(client, message, args, currentChannel, play) => {
         player.play(resource);
         subscription = connection.subscribe(player);
 
+        var song = new MessageEmbed()
+			.setColor(config['song-embed'])
+			.addFields(
+				{ name: ':notes: Now Playing', value: `***${video.title}***` },
+			)
+
         try{
-            await message.reply(`:thumbsup: Now Playing ***${video.title}***`)
+            await message.reply({ embeds: [song] })
         }
         catch{
-            client.channels.cache.get(currentChannel).send(`:thumbsup: Now Playing ***${video.title}***`);
+            client.channels.cache.get(currentChannel).send({ embeds: [song] });
         }
     } else {
         message.channel.send('No video results found');

@@ -1,0 +1,20 @@
+[
+    {
+        "name": "ping",
+        "description": "Latancy and API ping"
+    },
+    {
+        "name": "help",
+        "description": "See bot guides"
+    },
+    {   
+		"name": "tictactoe" ,
+		"description": "Play tic tac toe with a friend",
+        "options": [{
+            		"name": "opponent",
+            		"description": "Mention your opponent",
+                    "required": true,
+                    "type": "USER"
+            	    }]
+	}
+]
