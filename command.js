@@ -1,22 +1,18 @@
-const{prefix}= require('./config.json')
-const slash = require("./slash");
+const {PREFIX} = (require('./config.json')) ? require('./config.json') : process.env;
 
-module.exports = (client, aliases, callback) => {
+module.exports = (client, aliases, message, callback) => {
 	if(typeof aliases === 'string'){
 		aliases = [aliases]
 	}
+	const {content} = message
 
-	client.on('messageCreate', message => {
-		const {content} = message
+	aliases.forEach((alias) => {
+		const command = `${PREFIX}${alias}`
 
-		aliases.forEach((alias) => {
-			const command = `${prefix}${alias}`
-
-			if(content.startsWith(`${command} `) || content === command){
-				console.log(`Running the command ${command}`)
-				callback(message)
-			}
-		})
+		if(content.startsWith(`${command} `) || content === command){
+			// console.log(`Running the command ${command}`)
+			callback(message)
+		}
 	})
 }
 

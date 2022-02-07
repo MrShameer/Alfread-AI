@@ -1,5 +1,5 @@
-module.exports = (client, command, callback) => {
-    client.on('interactionCreate', async (interaction) => {
+module.exports = (client, command, interaction, callback) => {
+    // client.on('interactionCreate', async (interaction) => {
         if(!interaction.isCommand()) return;
     
         const { commandName } = interaction;
@@ -7,6 +7,6 @@ module.exports = (client, command, callback) => {
         if(commandName === command){
             callback(interaction)
         }
-    })
+    // })
     
 }

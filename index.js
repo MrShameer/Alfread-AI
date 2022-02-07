@@ -1,4 +1,4 @@
-const config = require('./config.json')
+const config = (require('./config.json')) ? require('./config.json') : process.env;
 const slashCommand = require('./slash-command.json')
 
 const { Client, Intents, MessageEmbed } = require("discord.js");
@@ -6,7 +6,7 @@ const { joinVoiceChannel }  = require('@discordjs/voice');
 var { addSpeechEvent } = require("discord-speech-recognition");
 
 const command = require('./command')
-const play = require('./song')
+const { playSong, skipSong, pauseSong, helpSong } = require('./song')
 const tictactoe = require('./tictactoe')
 const slash = require("./slash");
 
@@ -23,32 +23,40 @@ var currentChannel = null;
 var connection = null;
 
 const help =  new MessageEmbed()
-	.setColor(config['help-embed'])
+	.setColor(config['HELP-EMBED'])
 	.setTitle('Alfread-AI is a discord bot that can help you play songs and do fun activities.')
 	.setURL('')
 	.setAuthor({ name: 'Alfread-AI', iconURL: 'https://img.freepik.com/free-vector/business-suit-leader-person-concept-vector-illustration_1284-42667.jpg', url: '' })
-	.setDescription('\u200B')
+	.setDescription('This bot also has speach recognition so that you can run the commands using just speech')
 	.setThumbnail('https://img.freepik.com/free-vector/business-suit-leader-person-concept-vector-illustration_1284-42667.jpg')
 	.addFields(
 		{ name: '.help', value: 'Display commands for Alfread-AI' },
-		{ name: '.play {SONG_NAME / URL}', value: 'Play the song you have entered either in keywords or url'},
 		{ name: '.join', value: 'Joins the voice channel' },
 		{ name: '.leave', value: 'Leave the voice channel' },
+		{ name: '.songhelp', value: 'Display commands for songs' },
+		{ name: '.speechhelp', value: 'Display commands for speech recognition' },
 	)
-	.addField('\u200B','\u200B')
-	.addField('This bot also has speach recognition so that you can run the commands using just speach', '\u200B')
-	.addField('leave', 'if you say anything with leave or disconnect it will leave the voice channel')
-	.addField('play', 'if you say anything with play and folowed by the song name it will play the song.')
-	.addField('\u200B','\u200B')
 	.setTimestamp()
 	.setFooter({ text: 'By MrShameer', iconURL: 'https://img.freepik.com/free-vector/business-suit-leader-person-concept-vector-illustration_1284-42667.jpg' });
+
+function ping(message){
+	var ping =  new MessageEmbed()
+		.setAuthor({ name: 'Alfread-AI', iconURL: 'https://img.freepik.com/free-vector/business-suit-leader-person-concept-vector-illustration_1284-42667.jpg', url: '' })
+		.setDescription(`Latency : **${Date.now() - message.createdTimestamp}** ms \n API Latency : **${Math.round(client.ws.ping)}** ms`)
+	message.reply({ embeds: [ping] })
+}
+
+function checkcommand(args, message){
+	if(args.some(substring=>message.content.includes(substring))) return true;
+	return false;
+}
 
 client.on('ready', () => {
 	console.log('The client is ready')
 
-	const guildId = config.guildId;
+	const guildId = config.GUILDID;
 	var guild = client.guilds.cache.get(guildId)
-	// guild.commands.delete('939534235646197771')
+	// guild.commands.delete('command id')
 	// guild.commands.fetch().then(c=> console.log(c))
 	let commands
 	if (guild) {
@@ -60,12 +68,80 @@ client.on('ready', () => {
 	slashCommand.forEach(function(obj){ 
 		commands?.create(obj)
 	});
+})
 
-	slash(client, 'ttt11', message => {
-		message.reply('dddd')
+client.on('messageCreate', message => {
+	command(client, 'help', message, (message) =>{
+		message.reply({ embeds: [help] })
 	})
 
-	slash(client, 'tictactoe', async(interaction) => {
+	command(client, 'songhelp', message, (message) =>{
+		helpSong(message)
+	})
+
+	command(client, 'ping', message, (message) =>{
+		ping(message)
+	})
+
+	command(client, 'join', message, (message) =>{
+		var voiceChannel = message.member.voice.channel;
+		if (!voiceChannel) return message.reply('You need to be in a channel to execute this command!');
+		const permissions = voiceChannel.permissionsFor(message.client.user);
+		if (!permissions.has('CONNECT')) return message.reply('You dont have the correct permissins');
+		if (!permissions.has('SPEAK')) return message.reply('You dont have the correct permissins');
+		connection = joinVoiceChannel({
+			channelId: message.member.voice.channel.id,
+			guildId: message.guild.id,
+			adapterCreator: message.guild.voiceAdapterCreator,
+			selfDeaf: false
+		});
+		currentChannel = message.channel.id;
+	})
+
+	//EXPERIMENTAL
+	command(client, 'language', message, (message) =>{
+		var lang = message.content.substr('.language'.length).trim().split(' ').shift();
+		if(config.LANGUAGE[lang]){
+			console.log(config.LANGUAGE[lang]);
+			addSpeechEvent(client, { lang: config.LANGUAGE[lang] });
+		}
+	})
+
+	command(client, ['leave','disconnect','dc'], message, (message) =>{
+		connection.destroy();
+	})
+
+	command(client, ['play','p'], message, (message) =>{
+		connection = joinVoiceChannel({
+			channelId: message.member.voice.channel.id,
+			guildId: message.guild.id,
+			adapterCreator: message.guild.voiceAdapterCreator,
+			selfDeaf: false
+		});
+		currentChannel = message.channel.id;
+		var songs = message.content.substr('.play'.length).trim()
+		playSong(client, message, songs, currentChannel, connection)
+	})
+
+	command(client, ['stop','skip'], message, (message) =>{
+		skipSong()
+	})
+
+	command(client, ['pause'], message, (message) =>{
+		pauseSong(true)
+	})
+
+	command(client, ['resume'], message, (message) =>{
+		pauseSong(false)
+	})
+
+	command(client, ['tictactoe'], message, (message) => {
+		tictactoe(client, message)
+	})
+})
+
+client.on('interactionCreate', async (interaction) => {
+	slash(client, 'tictactoe', interaction, async(interaction) => {
 		let { options } = interaction
 
 		await interaction.reply( `${options.getUser('opponent')} do you want to play?`)
@@ -89,79 +165,14 @@ client.on('ready', () => {
 		});
 	})
 
-	command(client, 'help', (message) =>{
-		message.reply({ embeds: [help] })
-	})
-
-	slash(client, 'help', (interaction) =>{
+	slash(client, 'help', interaction, (interaction) =>{
 		interaction.reply({ embeds: [help] })
 	})
 
-	function ping(message){
-		var ping =  new MessageEmbed()
-			.setAuthor({ name: 'Alfread-AI', iconURL: 'https://img.freepik.com/free-vector/business-suit-leader-person-concept-vector-illustration_1284-42667.jpg', url: '' })
-			.setDescription(`Latency : **${Date.now() - message.createdTimestamp}** ms \n API Latency : **${Math.round(client.ws.ping)}** ms`)
-		message.reply({ embeds: [ping] })
-	}
-
-	command(client, 'ping', (message) =>{
+	slash(client, 'ping', interaction, (message) => {
 		ping(message)
-	})
-
-	slash(client, 'ping', (message) => {
-		ping(message)
-	})
-
-	command(client, 'join', (message) =>{
-		var voiceChannel = message.member.voice.channel;
-		if (!voiceChannel) return message.reply('You need to be in a channel to execute this command!');
-		const permissions = voiceChannel.permissionsFor(message.client.user);
-		if (!permissions.has('CONNECT')) return message.reply('You dont have the correct permissins');
-		if (!permissions.has('SPEAK')) return message.reply('You dont have the correct permissins');
-		connection = joinVoiceChannel({
-			channelId: message.member.voice.channel.id,
-			guildId: message.guild.id,
-			adapterCreator: message.guild.voiceAdapterCreator,
-			selfDeaf: false
-		});
-		currentChannel = message.channel.id;
-	})
-
-	//EXPERIMENTAL
-	command(client, 'language', (message) =>{
-		var lang = message.content.substr('.language'.length).trim().split(' ').shift();
-		if(config.language[lang]){
-			console.log(config.language[lang]);
-			addSpeechEvent(client, { lang: config.language[lang] });
-		}
-	})
-
-	command(client, ['leave','disconnect','dc'], (message) =>{
-		connection.destroy();
-	})
-
-	command(client, ['play','p'], (message) =>{
-		currentChannel = message.channel.id;
-		var songs = message.content.substr('.play'.length).trim()
-		play(client, message, songs, currentChannel)
-	})
-
-	command(client, ['stop','skip'], (message) =>{
-		play(null,message)
-	})
-
-	command(client, ['tictactoe'], (message) => {
-		tictactoe(client, message)
 	})
 })
-
-
-function checkcommand(args, message){
-	if(args.some(substring=>message.content.includes(substring))){
-		return true
-	}
-	return false
-}
 
 client.on("speech", (message) => {
 	console.log(message.content);
@@ -169,7 +180,7 @@ client.on("speech", (message) => {
 		return;
 	}
 	var listned = new MessageEmbed()
-		.setColor(config['listned-embed'])
+		.setColor(config['LISTNED-EMBED'])
 		.addFields(
 			{ name: 'What I heared', value: message.content },
 		)
@@ -180,19 +191,22 @@ client.on("speech", (message) => {
 			connection.destroy();
 		}
 		else if(checkcommand(['play'], message)){
-			// var keyword = (message.content.indexOf('play') > message.content.indexOf('song')) ? 'play' : 'song';
+			connection = joinVoiceChannel({
+				channelId: message.member.voice.channel.id,
+				guildId: message.guild.id,
+				adapterCreator: message.guild.voiceAdapterCreator,
+				selfDeaf: false
+			});
 			var songs = message.content.substring(message.content.indexOf('play')+'play'.length).trim()
-			// if(songs){
-			play(client, message, songs, currentChannel)
-			// }
+			playSong(client, message, songs, currentChannel, connection)
 		}
 		else if(checkcommand(['stop','skip'], message)){
-			play()
+			skipSong()
 		}
 	}
 });
 
-client.login(config.token)
+client.login(config.TOKEN)
 
 //544961199696
 //https://discord.com/api/oauth2/authorize?client_id=934534754416611400&permissions=544961199696&scope=bot%20applications.commands

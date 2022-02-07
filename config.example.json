@@ -1,11 +1,11 @@
 {
-	"token": "YOUR BOT TOKEN",
-	"prefix": ".",
-	"listned-embed" : "#000000",
-	"help-embed" : "#000000",
-	"song-embed" : "#FFFFFF",
-	"guildId" : "FOR TESTING PURPOSES, PUT YOU TESTING GUILD ID",
-	"language": 
+	"TOKEN": "YOUR BOT TOKEN",
+	"PREFIX": ".",
+	"LISTNED-EMBED" : "#000000",
+	"HELP-EMBED" : "#000000",
+	"SONG-EMBED" : "#FFFFFF",
+	"GUILDID" : "FOR TESTING PURPOSES, PUT YOU TESTING GUILD ID",
+	"LANGUAGE": 
 		{
 			"english-us" : "en-US",
 			"english-uk" : "en-GB",

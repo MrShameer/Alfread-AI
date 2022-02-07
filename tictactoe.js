@@ -64,6 +64,5 @@ module.exports = (client, message, interaction) => {
     
         await interaction.deferUpdate();
     }
-   
-    console.log(message.mentions.users.first().username);
+    // console.log(message.mentions.users.first().username);
 }
