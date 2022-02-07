@@ -46,6 +46,23 @@ const help =  new MessageEmbed()
 	.setTimestamp()
 	.setFooter({ text: 'By ...', iconURL: 'https://img.freepik.com/free-vector/business-suit-leader-person-concept-vector-illustration_1284-42667.jpg' });
 
+const speechHelp =  new MessageEmbed()
+	.setColor(config['HELP-EMBED'])
+	.setTitle('Speech Help')
+	.setURL('')
+	.setAuthor({ name: 'Alfread-AI', iconURL: 'https://img.freepik.com/free-vector/business-suit-leader-person-concept-vector-illustration_1284-42667.jpg', url: '' })
+	.setDescription('By saying any of the following words you can run the command')
+	.setThumbnail('https://img.freepik.com/free-vector/business-suit-leader-person-concept-vector-illustration_1284-42667.jpg')
+	.addFields(
+		{ name: 'play', value: 'Play the song after the play keyword. E.g. when you say "Play the song Happy Birthday" it will play Happy Birthday song'},
+		{ name: 'stop "or" skip', value: 'Skip the current song' },
+		{ name: 'leave "or" disconnect', value: 'Make the bot disconnect from the channel' },
+        { name: 'pause', value: 'Pause the current song' },
+        { name: 'resume', value: 'Resume the current song' },
+	)
+	.setTimestamp()
+	.setFooter({ text: 'By ...', iconURL: 'https://img.freepik.com/free-vector/business-suit-leader-person-concept-vector-illustration_1284-42667.jpg' });
+
 function ping(message){
 	var ping =  new MessageEmbed()
 		.setAuthor({ name: 'Alfread-AI', iconURL: 'https://img.freepik.com/free-vector/business-suit-leader-person-concept-vector-illustration_1284-42667.jpg', url: '' })
@@ -84,6 +101,10 @@ client.on('messageCreate', message => {
 
 	command(client, 'songhelp', message, (message) =>{
 		helpSong(message)
+	})
+
+	command(client, 'speechhelp', message, (message) =>{
+		message.reply({ embeds: [speechHelp] })
 	})
 
 	command(client, 'ping', message, (message) =>{
@@ -209,6 +230,12 @@ client.on("speech", (message) => {
 		}
 		else if(checkcommand(['stop','skip'], message)){
 			skipSong()
+		}
+		else if(checkcommand(['pause'], message)){
+			pauseSong(true)
+		}
+		else if(checkcommand(['resume'], message)){
+			pauseSong(false)
 		}
 	}
 });
