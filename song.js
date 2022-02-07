@@ -54,10 +54,15 @@ module.exports = {
         if(validURL(args[0])){
             const stream  = ytdl(args[0], {filter: 'audioonly'});
 
-            var resource = createAudioResource(stream);
+            try{
+                var resource = createAudioResource(stream);
 
-            player.play(resource);
-            connection.subscribe(player);
+                player.play(resource);
+                connection.subscribe(player); 
+            }catch{
+                return
+            }
+            
 
             try{
                 await message.reply(`:notes: Now Playing ***Your Link!***`)
@@ -103,10 +108,15 @@ module.exports = {
             
             const stream  = ytdl(video.url, {filter: 'audioonly'});
 
-            var resource = createAudioResource(stream);
+            try{
+               var resource = createAudioResource(stream);
 
-            player.play(resource);
-            connection.subscribe(player);
+                player.play(resource);
+                connection.subscribe(player); 
+            }catch{
+                return
+            }
+            
 
             var song = new MessageEmbed()
                 .setColor(config['SONG-EMBED'])
