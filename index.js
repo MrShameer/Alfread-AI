@@ -1,4 +1,11 @@
-const config = (require('./config.json')) ? require('./config.json') : process.env;
+var config = null;
+try{
+	config = require('./config.json');
+}
+catch{
+	config = process.env;
+}
+// const config = (require('./config.json')) ? require('./config.json') : process.env;
 const slashCommand = require('./slash-command.json')
 
 const { Client, Intents, MessageEmbed } = require("discord.js");

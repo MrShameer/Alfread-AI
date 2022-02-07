@@ -4,7 +4,13 @@ var Queue=require('js-queue');
 
 const { createAudioPlayer, createAudioResource }  = require('@discordjs/voice');
 const { Collection, MessageEmbed } = require('discord.js');
-const config = (require('./config.json')) ? require('./config.json') : process.env;
+var config = null;
+try{
+	config = require('./config.json');
+}
+catch{
+	config = process.env;
+}
 var queue=new Queue;
 var player = createAudioPlayer();
 
