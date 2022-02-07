@@ -44,7 +44,7 @@ const help =  new MessageEmbed()
 		{ name: '.speechhelp', value: 'Display commands for speech recognition' },
 	)
 	.setTimestamp()
-	.setFooter({ text: 'By MrShameer', iconURL: 'https://img.freepik.com/free-vector/business-suit-leader-person-concept-vector-illustration_1284-42667.jpg' });
+	.setFooter({ text: 'By ...', iconURL: 'https://img.freepik.com/free-vector/business-suit-leader-person-concept-vector-illustration_1284-42667.jpg' });
 
 function ping(message){
 	var ping =  new MessageEmbed()
