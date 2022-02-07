@@ -76,21 +76,21 @@ module.exports = {
 
         const video = await videoFinder(args);
         if(video){
-            // if(queue.contents.length>0){
+            if(player.state.status == "playing"){
                 
-            //     var addQueue = new MessageEmbed()
-            // 	.setColor(config['song-embed'])
-            // 	.addFields(
-            // 		{ name: ':arrow_double_up: Added to the queue', value: `***${video.title}***` },
-            // 	)
+                var addQueue = new MessageEmbed()
+            	.setColor(config['song-embed'])
+            	.addFields(
+            		{ name: ':arrow_double_up: Added to the queue', value: `***${video.title}***` },
+            	)
 
-            //     try{
-            //         await message.reply({ embeds: [song] })
-            //     }
-            //     catch{
-            //         await client.channels.cache.get(currentChannel).send({ embeds: [addQueue] });
-            //     }
-            // }
+                try{
+                    await message.reply({ embeds: [song] })
+                }
+                catch{
+                    await client.channels.cache.get(currentChannel).send({ embeds: [addQueue] });
+                }
+            }
             queue.add(
                 addSong.bind(queue,video)
             );
