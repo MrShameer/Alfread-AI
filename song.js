@@ -59,8 +59,8 @@ module.exports = {
 
                 player.play(resource);
                 connection.subscribe(player); 
-            }catch{
-                return
+            }catch(err){
+                return console.log(err.message);
             }
             
 
@@ -81,6 +81,7 @@ module.exports = {
 
         const video = await videoFinder(args);
         if(video){
+            //TODO: NOT PUTTING EMBED WHEN PLAYER PAUSE SONG
             if(player.state.status == "playing"){
                 
                 var addQueue = new MessageEmbed()
@@ -113,8 +114,8 @@ module.exports = {
 
                 player.play(resource);
                 connection.subscribe(player); 
-            }catch{
-                return
+            }catch(err){
+                return console.log(err.message);
             }
             
 
