@@ -71,7 +71,13 @@ function ping(message){
 }
 
 function checkcommand(args, message){
-	if(args.some(substring=>message.content.includes(substring))) return true;
+	if(args.some(substring=>message.content.includes(substring))){
+		var listned = new MessageEmbed()
+			.setColor(config['LISTNED-EMBED'])
+			.addFields({ name: 'What I heared', value: message.content },)
+		client.channels.cache.get(currentChannel).send({ embeds: [listned] });
+		return true;
+	}
 	return false;
 }
 
@@ -140,6 +146,8 @@ client.on('messageCreate', message => {
 	})
 
 	command(client, ['play','p'], message, (message) =>{
+		const voiceChannel = message.member.voice.channel;
+        if (!voiceChannel) return message.reply('You need to be in a channel to execute this command!');
 		connection = joinVoiceChannel({
 			channelId: message.member.voice.channel.id,
 			guildId: message.guild.id,
@@ -166,6 +174,10 @@ client.on('messageCreate', message => {
 	command(client, ['tictactoe'], message, (message) => {
 		tictactoe(client, message)
 	})
+
+	// command(client, ['deafen'], message, (message) =>{
+	// 	connection.setSelfDeaf(true);
+	// })
 })
 
 client.on('interactionCreate', async (interaction) => {
@@ -207,24 +219,11 @@ client.on("speech", (message) => {
 	if(!message.content){
 		return;
 	}
-	var listned = new MessageEmbed()
-		.setColor(config['LISTNED-EMBED'])
-		.addFields(
-			{ name: 'What I heared', value: message.content },
-		)
-	client.channels.cache.get(currentChannel).send({ embeds: [listned] });
-
-	if(currentChannel){
+	else if(currentChannel){
 		if(checkcommand(['leave','disconnect'], message)){
 			connection.destroy();
 		}
 		else if(checkcommand(['play'], message)){
-			connection = joinVoiceChannel({
-				channelId: message.member.voice.channel.id,
-				guildId: message.guild.id,
-				adapterCreator: message.guild.voiceAdapterCreator,
-				selfDeaf: false
-			});
 			var songs = message.content.substring(message.content.indexOf('play')+'play'.length).trim()
 			playSong(client, message, songs, currentChannel, connection)
 		}
@@ -237,6 +236,9 @@ client.on("speech", (message) => {
 		else if(checkcommand(['resume'], message)){
 			pauseSong(false)
 		}
+		// else if(checkcommand(['deafen'], message)){
+		//
+		// }
 	}
 });
 

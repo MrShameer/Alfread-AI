@@ -82,7 +82,7 @@ module.exports = {
         const video = await videoFinder(args);
         if(video){
             //TODO: NOT PUTTING EMBED WHEN PLAYER PAUSE SONG
-            if(player.state.status == "playing"){
+            if(player.state.status == "playing" || player.state.status == "paused"){
                 
                 var addQueue = new MessageEmbed()
             	.setColor(config['song-embed'])
